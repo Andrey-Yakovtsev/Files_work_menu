@@ -1,56 +1,71 @@
-# 1. Создать пустой словарь, в котором ключ - название блюда = 1 строка, после разрыва,
-# а значения = список словарей из списка продуктов и количеств
-# cook_book = {
-#   'Омлет': [
-#     {'ingredient_name': 'Яйцо', 'quantity': 2, 'measure': 'шт.'},
-#     {'ingredient_name': 'Молоко', 'quantity': 100, 'measure': 'мл'},
-#     {'ingredient_name': 'Помидор', 'quantity': 2, 'measure': 'шт'}
-#     ],
-# 2. кол-во значений в списке указано сразу после названия. Как нам это поможет?
-# 3. Строки можно разделять сепаратором "|"
 from pprint import pprint
-cook_book = {} #Это словарь из ключа = название блюда и значений = список из словарей ингридиентов
-dish_items_list = [] #список из словарей ингридиентов
-dish_items = dict.fromkeys(['ingredient_name', 'quantity', 'measure']) #Это словарь ингридиентов
-with open("reciepts_new.txt", 'r') as file:
-    for line in file.readlines():
-        line = line[0:-1] #обрезаем символ переноса строки
-        line.strip()
 
-        if line and len(line) > 2 and not "|" in line: #если одно слово и знаков в нем больше 2 (типа, не цифра)
-            cook_book = dict.fromkeys([line], [])
-            new_list = list(cook_book.values())
-            print('список new_list - занчения словаря кукбук', new_list)
-            print("Ключи словаря кукбук", cook_book)
-        if line and len(line) <= 2 and not "|" in line: #выловили счетчик кол-ва ингридиентов в блюде
-            counter = int(line)
-            print(counter)
-        if "|" in line: #строки с ингридиентами и порциями
-            newdict = line.split(" | ")
-            print(newdict)
-            for item in range(int(counter)):
-                dish_items['ingredient_name'] = newdict[0]
-                dish_items['quantity'] = newdict[1]
-                dish_items['measure'] = newdict[2]
-                new_list.append(dish_items)
-        print(new_list)
-            # print(dish_items_list)
-            # f = list(cook_book['line'])
-            # print(f)
-            # f.append(dish_items_list)
-            # print(f)
-    #         dish_items_list.append(dish_items)
-    # print(dish_items_list)
-            # print(cook_book.values())
-        #
-        # pprint(cook_book)
+def dict_collector(file_path):
+    with open(file_path, 'r') as file_work:
+        menu = {}
+        for line in file_work:
+            dish_name = line[:-1]
+            counter = file_work.readline().strip()
+            list_of_ingridient = []
+            for i in range(int(counter)):
+                dish_items = dict.fromkeys(['ingredient_name', 'quantity', 'measure']) # - временный словарь с ингридиетом
+                ingridient = file_work.readline().strip().split(' | ') # - вот так перемещаемся по файлу
+                for item in ingridient:
+                    dish_items['ingredient_name'] = ingridient[0]
+                    dish_items['quantity'] = ingridient[1]
+                    dish_items['measure'] = ingridient[2]
+                list_of_ingridient.append(dish_items)
+                cook_book = {dish_name: list_of_ingridient}
+                menu.update(cook_book)
+            file_work.readline()
+
+    return(menu)
+
+dict_collector('reciepts_initial.txt')
+
+def get_shop_list_by_dishes(dishes, persons=int):
+    '''Нужно написать функцию, которая на вход принимает список блюд
+    из cook_book и количество персон для кого мы будем готовить
+    На выходе мы должны получить словарь с названием ингредиентов и его количества для блюда. Например, для такого вызова
+    get_shop_list_by_dishes(['Запеченный картофель', 'Омлет'], 2)
+    {
+  'Картофель': {'measure': 'кг', 'quantity': 2},
+  'Молоко': {'measure': 'мл', 'quantity': 200},
+  'Помидор': {'measure': 'шт', 'quantity': 4},
+  'Сыр гауда': {'measure': 'г', 'quantity': 200},
+  'Яйцо': {'measure': 'шт', 'quantity': 4},
+  'Чеснок': {'measure': 'зубч', 'quantity': 6}
+}
+    '''
+    menu = dict_collector('reciepts_initial.txt')
+    print('Наше меню выглядит вот так:')
+    pprint(menu)
+    print()
+    shopping_list = {}
+    # pprint(menu.keys())
+    try:
+        for dish in dishes:
+            for item in (menu[dish]):
+                # print(item['ingredient_name'])
+                # print(item['measure'])
+                # print(item['quantity'])
+                items_list = dict([(item['ingredient_name'], {'measure': item['measure'], 'quantity': int(item['quantity'])*persons})])
+                if shopping_list.get(item['ingredient_name']):
+                    # print(f' Такое {items_list} уже есть в списке. Добавил еще')
+                    extra_item = (int(shopping_list[item['ingredient_name']]['quantity']) +
+                                  int(items_list[item['ingredient_name']]['quantity']))
+                    # print(extra_item)
+                    shopping_list[item['ingredient_name']]['quantity'] = extra_item
+
+                else:
+                    # shopping_list[item['ingredient_name']]['quantity'] *= persons
+                    shopping_list.update(items_list)
+
+        print(f"Для приготовления блюд на {persons} человек  нам необходимо купить:")
+        pprint(shopping_list)
+    except KeyError:
+        print("Вы ошиблись в названии блюда, проверьте ввод")
 
 
-        #     cook_book = dict.fromkeys([line])
-        #     cook_book['line'].append(dish_items_list)
-        # pprint(cook_book)
-        # if not line:
-        #     break
-        # elif:
-        #     pass
+get_shop_list_by_dishes(['Омлет', 'Фахитос'], 10)
 
